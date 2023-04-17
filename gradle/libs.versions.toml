@@ -1,0 +1,23 @@
+[versions]
+kotlinJvm = "1.8.20"
+kotlinxSerializationJson = "1.5.0"
+springFrameworkBoot = "3.0.5"
+springDependencyManagment = "1.1.0"
+javaxMail = "1.4.7"
+
+[libraries]
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+springboot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa" }
+springboot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
+
+javax-mail = { group = "javax.mail", name = "mail", version.ref = "javaxMail" }
+postgresql = { group = "org.postgresql", name = "postgresql" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinJvm" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinJvm" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlinJvm" }
+kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlinJvm" }
+spring-framework-boot = { id = "org.springframework.boot", version.ref = "springFrameworkBoot" }
+spring-dependency-managment = { id = "io.spring.dependency-management", version.ref = "springDependencyManagment" }
