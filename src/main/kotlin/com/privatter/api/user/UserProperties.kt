@@ -7,5 +7,5 @@ import org.springframework.stereotype.Component
 @Component
 @ConfigurationProperties(prefix = "privatter.user")
 class UserProperties {
-    lateinit var userAuthMethods: List<UserAuthMethod>
+    lateinit var authMethods: List<UserAuthMethod>
 }

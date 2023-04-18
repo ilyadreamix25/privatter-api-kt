@@ -28,6 +28,8 @@ data class UserSignUpRequestModel(
         require(authValue.isNotEmpty())
         require(profileNickname.isNotEmpty())
         require(profileNickname.length in 4..24)
-        require(profileNickname.matches("\\\\A[A-Za-z\\\\d_]+\\\\z".toRegex()))
+        require(profileNickname.matches("\\A[A-Za-z\\d_]+\\z".toRegex()))
+        require(profileNickname.toSet() != setOf("_"))
+        require(profileNickname.toSet().size >= 3)
     }
 }

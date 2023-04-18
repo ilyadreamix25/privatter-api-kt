@@ -9,5 +9,11 @@ class UserEntityAuth(
     var key: String,
 
     @Column(name = "auth_value")
-    var value: String
+    var value: String,
+
+    @Column(name = "auth_verified")
+    var verified: Boolean = false,
+
+    @Column(name = "auth_verified_at")
+    var verifiedAt: Long = 0,
 )

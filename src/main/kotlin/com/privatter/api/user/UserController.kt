@@ -1,5 +1,6 @@
 package com.privatter.api.user
 
+import com.privatter.api.user.enums.UserAuthMethod
 import com.privatter.api.user.model.UserSignUpRequestModel
 import org.springframework.data.repository.query.Param
 import org.springframework.web.bind.annotation.PostMapping
@@ -14,5 +15,5 @@ class UserController(private val service: UserService) {
     fun signUp(
         @RequestBody body: UserSignUpRequestModel,
         @Param("method") method: String
-    ): Nothing = TODO()
+    ) = service.signUp(body, UserAuthMethod.of(method)!!)
 }

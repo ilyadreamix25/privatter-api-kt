@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.privatter.api"
-version = "0.0.1"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
@@ -19,7 +19,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.springboot.starter.data.jpa)
     implementation(libs.springboot.starter.web)
-
-    implementation(libs.javax.mail)
+    implementation(libs.springboot.starter.mail)
     runtimeOnly(libs.postgresql)
 }

@@ -5,12 +5,6 @@ import jakarta.persistence.Embeddable
 
 @Embeddable
 class UserEntityMetadata(
-    @Column(name = "metadata_verified")
-    var verified: Boolean = false,
-
-    @Column(name = "metadata_verified_at")
-    var verifiedAt: Long = 0,
-
     @Column(name = "metadata_signed_up_at")
     var signedUpAt: Long = System.currentTimeMillis(),
 

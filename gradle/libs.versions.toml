@@ -10,8 +10,7 @@ kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 springboot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa" }
 springboot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
-
-javax-mail = { group = "javax.mail", name = "mail", version.ref = "javaxMail" }
+springboot-starter-mail = { group = "org.springframework.boot", name = "spring-boot-starter-mail" }
 postgresql = { group = "org.postgresql", name = "postgresql" }
 
 [plugins]
