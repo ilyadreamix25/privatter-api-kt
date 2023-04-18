@@ -5,20 +5,21 @@ import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import java.util.UUID
 
 @Entity
-@Table(name = "user")
-class User(
+@Table(name = "users")
+class UserEntity(
     @Id
     @Column(name = "id", unique = true)
-    var id: String,
+    var id: String = UUID.randomUUID().toString(),
 
     @Embedded
-    var auth: UserAuth,
+    var auth: UserEntityAuth,
 
     @Embedded
-    var profile: UserProfile,
+    var profile: UserEntityProfile,
 
     @Embedded
-    var metadata: UserMetadata
+    var metadata: UserEntityMetadata = UserEntityMetadata()
 )

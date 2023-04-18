@@ -4,7 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 
 @Embeddable
-class UserProfile(
+class UserEntityProfile(
     @Column(name = "profile_nickname", unique = true)
     var nickname: String,
 
