@@ -1,7 +1,7 @@
 package com.privatter.api.user.enums
 
-enum class UserSignUpResult(val isSuccess: Boolean = false) {
-    OK(true),
+enum class UserSignUpResult {
+    OK,
     INVALID_REQUEST,
     INVALID_CAPTCHA,
     USER_EXISTS,
