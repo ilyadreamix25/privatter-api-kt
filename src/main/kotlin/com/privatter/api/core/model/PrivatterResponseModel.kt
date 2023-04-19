@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity
 
 typealias PrivatterEmptyResponseModel = PrivatterResponseModel<JsonObject>
 typealias PrivatterResponseEntity <T> = ResponseEntity<PrivatterResponseModel<T>>
+typealias PrivatterEmptyResponseEntity = ResponseEntity<PrivatterResponseModel<JsonObject>>
 
 @Serializable
 data class PrivatterResponseModel<T>(

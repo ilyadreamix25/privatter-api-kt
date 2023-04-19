@@ -1,7 +1,9 @@
 package com.privatter.api.core
 
+import com.privatter.api.core.model.PrivatterEmptyResponseEntity
 import com.privatter.api.utility.beautify
 import org.springframework.http.HttpStatus
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -15,18 +17,24 @@ class PrivatterExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun handleNoHandlerFoundException() =
-        PrivatterResponseResource.parseError(PrivatterResponseResource.INVALID_SERVICE)
+        PrivatterResponseResource.Model.INVALID_SERVICE
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     fun handleHttpRequestMethodNotSupportedException() =
-        PrivatterResponseResource.parseError(PrivatterResponseResource.INVALID_METHOD)
+        PrivatterResponseResource.Model.INVALID_METHOD
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleHttpMessageNotReadableException(): PrivatterEmptyResponseEntity = PrivatterEmptyResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
+        .body(PrivatterResponseResource.Model.INVALID_REQUEST)
 
     @ExceptionHandler(Exception::class)
-    fun handleInternalServerException(exception: Exception) =
-        PrivatterResponseResource.parseError(
-            resource = PrivatterResponseResource.SERVER_ERROR,
-            errorStackTrace = exception.beautify(true).take(4),
-            errorMessage = exception.message
-        )
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    fun handleInternalServerException(exception: Exception) = PrivatterResponseResource.parseError(
+        resource = PrivatterResponseResource.SERVER_ERROR,
+        errorMessage = exception.message,
+        errorStackTrace = exception.beautify(true).take(4)
+    )
 }

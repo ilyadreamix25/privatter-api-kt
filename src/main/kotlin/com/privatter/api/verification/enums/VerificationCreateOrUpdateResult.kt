@@ -1,8 +1,8 @@
 package com.privatter.api.verification.enums
 
-enum class VerificationCreateOrUpdateResult {
-    CREATED,
-    UPDATED,
+enum class VerificationCreateOrUpdateResult(val resendMail: Boolean = false) {
+    CREATED(true),
+    UPDATED(true),
     SKIPPED,
     ALREADY_VERIFIED
 }

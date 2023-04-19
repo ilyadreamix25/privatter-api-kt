@@ -1,7 +1,9 @@
 package com.privatter.api.core
 
+import com.privatter.api.core.model.PrivatterEmptyResponseEntity
 import com.privatter.api.core.model.PrivatterEmptyResponseModel
 import com.privatter.api.core.model.PrivatterResponseModel
+import kotlinx.serialization.json.JsonObject
 
 private const val UPDATE_APP = "Update the app to the latest version."
 private const val TRY_AGAIN_LATER = "Please try again later."
@@ -14,8 +16,18 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
     INVALID_METHOD(1002, "Invalid method. $UPDATE_APP"),
     SERVER_ERROR(1003, "Server error. $TRY_AGAIN_LATER"),
 
-    USER_EXISTS(2000, USER_EXISTS.name),
-    USER_VERIFICATION_REQUIRED(2001, USER_VERIFICATION_REQUIRED.name);
+    USER_EXISTS(2000, "A user with such credentials already exists."),
+    USER_VERIFICATION_REQUIRED(2001, "Verification required. Please check your mailbox.");
+
+    object Model {
+        val OK = parseOk<JsonObject>(null)
+        val INVALID_REQUEST = parseError(PrivatterResponseResource.INVALID_REQUEST)
+        val INVALID_SERVICE = parseError(PrivatterResponseResource.INVALID_SERVICE)
+        val INVALID_METHOD = parseError(PrivatterResponseResource.INVALID_METHOD)
+        val SERVER_ERROR = parseError(PrivatterResponseResource.SERVER_ERROR)
+        val USER_EXISTS = parseError(PrivatterResponseResource.USER_EXISTS)
+        val USER_VERIFICATION_REQUIRED = parseError(PrivatterResponseResource.USER_VERIFICATION_REQUIRED)
+    }
 
     companion object {
         fun <T> parseOk(data: T? = null) = PrivatterResponseModel(

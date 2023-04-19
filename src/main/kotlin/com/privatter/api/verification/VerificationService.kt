@@ -32,6 +32,7 @@ class VerificationService(
 
         if (System.currentTimeMillis() > verification.createdAt + verification.expirationTime) {
             verification.createdAt = System.currentTimeMillis()
+            repository.save(verification)
             return VerificationCreateOrUpdateResult.UPDATED
         }
 
