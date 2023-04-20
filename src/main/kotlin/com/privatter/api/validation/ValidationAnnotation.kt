@@ -1,21 +1,21 @@
 package com.privatter.api.validation
 
-import org.intellij.lang.annotations.RegExp
+import org.intellij.lang.annotations.Language
 
 annotation class ValidationAnnotation
 
 @ValidationAnnotation
-@Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.PROPERTY)
 annotation class IsNotBlank
 
 @ValidationAnnotation
-@Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.PROPERTY)
 annotation class IsNotEmpty
 
 @ValidationAnnotation
-@Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
+@Target(AnnotationTarget.PROPERTY)
 annotation class LengthBetween(val min: Int, val max: Int)
 
 @ValidationAnnotation
-@Target(AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
-annotation class Matches(@RegExp val regularExpression: String)
+@Target(AnnotationTarget.PROPERTY)
+annotation class Matches(@Language("RegExp") val regularExpression: String)

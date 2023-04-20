@@ -1,8 +1,10 @@
 package com.privatter.api.core
 
+import com.privatter.api.core.model.PrivatterEmptyResponseModel
 import com.privatter.api.utility.beautifyStackTrace
 import com.privatter.api.validation.exception.ValidationException
 import com.privatter.api.validation.exception.ValidationMultipleException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpRequestMethodNotSupportedException
@@ -49,9 +51,15 @@ class PrivatterExceptionHandler {
 
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun handleInternalServerException(exception: Exception) = PrivatterResponseResource.parseError(
-        resource = PrivatterResponseResource.SERVER_ERROR,
-        errorMessage = exception.message,
-        errorInformation = exception.beautifyStackTrace(true).take(4)
-    )
+    fun handleInternalServerException(exception: Exception): PrivatterEmptyResponseModel {
+        LoggerFactory
+            .getLogger(PrivatterExceptionHandler::class.java)
+            .error(exception.message, exception)
+
+        return PrivatterResponseResource.parseError(
+            resource = PrivatterResponseResource.SERVER_ERROR,
+            errorMessage = exception.message,
+            errorInformation = exception.beautifyStackTrace(true).take(4)
+        )
+    }
 }

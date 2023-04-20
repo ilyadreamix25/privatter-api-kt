@@ -4,7 +4,7 @@ import com.privatter.api.validation.*
 import com.privatter.api.validation.exception.ValidationException
 import com.privatter.api.validation.exception.ValidationMultipleException
 
-fun validate(
+fun validateFromRequirement(
     requirement: Boolean,
     message: String? = null,
     throwException: Boolean = true
@@ -17,7 +17,7 @@ fun validate(
     else null
 }
 
-fun <T : Any> validate(context: T) {
+fun <T : Any> validateFromContext(context: T) {
     val validationProperties = context::class.findValidationProperties()
     val validationExceptions = validationProperties.getValidationExceptions(context)
     if (validationExceptions.isNotEmpty())

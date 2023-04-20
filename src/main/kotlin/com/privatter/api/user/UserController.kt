@@ -45,4 +45,7 @@ class UserController(private val service: UserService) {
                 .body(PrivatterResponseResource.Model.USER_VERIFICATION_REQUIRED)
         }
     }
+
+    @PostMapping("verify-account")
+    fun verifyAccount(): Nothing = TODO()
 }

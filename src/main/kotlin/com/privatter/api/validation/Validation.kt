@@ -1,6 +1,6 @@
 package com.privatter.api.validation
 
-import com.privatter.api.utility.validate as validateAsException
+import com.privatter.api.utility.validateFromRequirement
 import com.privatter.api.validation.exception.ValidationException
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -43,18 +43,23 @@ private fun <T : Any> KProperty<T>.findValidationAnnotations() = this.annotation
 }
 
 private fun <T : Any> KProperty<T>.validate(context: T, annotation: Annotation): ValidationException? {
-    val thisValue = this.call(context)
+    val thisValue = try {
+        this.call(context)
+    } catch (_: Exception) {
+        return null
+    }
+
     if (thisValue !is String)
         throw ValidationException("Unsupported type of ${this.name} (${this::class.simpleName})")
 
     when (annotation) {
-        is IsNotBlank -> return validateAsException(
+        is IsNotBlank -> return validateFromRequirement(
             thisValue.isNotBlank(),
             "${this.name} must not be blank",
             false
         )
 
-        is IsNotEmpty -> return validateAsException(
+        is IsNotEmpty -> return validateFromRequirement(
             thisValue.isNotEmpty(),
             "${this.name} must not be empty",
             false
@@ -62,20 +67,20 @@ private fun <T : Any> KProperty<T>.validate(context: T, annotation: Annotation):
 
         is LengthBetween -> {
             val range = (annotation.min)..(annotation.max)
-            return validateAsException(
+            return validateFromRequirement(
                 thisValue.length in range,
                 "${this.name} length must be in $range range",
                 false
             )
         }
 
-        is Matches -> return validateAsException(
+        is Matches -> return validateFromRequirement(
             thisValue.matches(annotation.regularExpression.toRegex()),
             "${this.name} must match ${annotation.regularExpression}",
             false
         )
 
-        // Most likely it will never happen
+        // It will never happen, take my word for it
         else -> throw ValidationException("Unsupported validation")
     }
 }

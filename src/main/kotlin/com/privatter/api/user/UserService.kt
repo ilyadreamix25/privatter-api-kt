@@ -11,6 +11,7 @@ import com.privatter.api.user.enums.UserSignUpResult
 import com.privatter.api.user.model.UserSignUpRequestModel
 import com.privatter.api.verification.VerificationService
 import com.privatter.api.verification.enums.VerificationAction
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 
 /** 15 minutes */
@@ -53,23 +54,27 @@ class UserService(
             return UserSignUpResult.VERIFICATION_REQUIRED
         }
 
-        val newUser = repository.save(
-            UserEntity(
-                auth = UserEntityAuth(
-                    key = body.authKey,
-                    value = body.authValue
-                ),
-                profile = UserEntityProfile(
-                    nickname = body.profileNickname,
-                    description = body.profileDescription,
-                    iconUrl = body.profileIconUrl
+        try {
+            val newUser = repository.save(
+                UserEntity(
+                    auth = UserEntityAuth(
+                        key = body.authKey,
+                        value = body.authValue
+                    ),
+                    profile = UserEntityProfile(
+                        nickname = body.profileNickname,
+                        description = body.profileDescription,
+                        iconUrl = body.profileIconUrl
+                    )
                 )
             )
-        )
 
-        createOrUpdateSignUpVerification(email = body.authKey, userId = newUser.id)
+            createOrUpdateSignUpVerification(email = body.authKey, userId = newUser.id)
 
-        return UserSignUpResult.VERIFICATION_REQUIRED
+            return UserSignUpResult.VERIFICATION_REQUIRED
+        } catch (_: DataIntegrityViolationException) {
+            return UserSignUpResult.USER_EXISTS
+        }
     }
 
     private fun continueSignUpForGoogleOauth(body: UserSignUpRequestModel) = UserSignUpResult.INVALID_METHOD
