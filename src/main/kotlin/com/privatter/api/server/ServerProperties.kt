@@ -11,4 +11,6 @@ class ServerProperties {
     lateinit var port: String
     lateinit var version: String
     var debug by Delegates.notNull<Boolean>()
+
+    val url get() = "$host:$port"
 }

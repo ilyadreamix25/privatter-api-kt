@@ -29,15 +29,15 @@ class UserController(private val service: UserService) {
 
         return when (service.signUp(body, authMethod)) {
             UserSignUpResult.INVALID_METHOD -> PrivatterEmptyResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .badRequest()
                 .body(PrivatterResponseResource.Model.INVALID_REQUEST)
 
             UserSignUpResult.INVALID_CAPTCHA -> PrivatterEmptyResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .badRequest()
                 .body(PrivatterResponseResource.Model.INVALID_REQUEST)
 
             UserSignUpResult.USER_EXISTS -> PrivatterEmptyResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .badRequest()
                 .body(PrivatterResponseResource.Model.USER_EXISTS)
 
             UserSignUpResult.VERIFICATION_REQUIRED -> PrivatterEmptyResponseEntity

@@ -2,6 +2,7 @@ package com.privatter.api.user
 
 import com.privatter.api.mail.MailService
 import com.privatter.api.recaptcha.ReCaptchaService
+import com.privatter.api.server.ServerProperties
 import com.privatter.api.user.entity.UserEntity
 import com.privatter.api.user.entity.UserEntityAuth
 import com.privatter.api.user.entity.UserEntityProfile
@@ -10,7 +11,6 @@ import com.privatter.api.user.enums.UserSignUpResult
 import com.privatter.api.user.model.UserSignUpRequestModel
 import com.privatter.api.verification.VerificationService
 import com.privatter.api.verification.enums.VerificationAction
-import com.privatter.api.verification.enums.VerificationCreateOrUpdateResult
 import org.springframework.stereotype.Service
 
 /** 15 minutes */
@@ -22,7 +22,8 @@ class UserService(
     private val properties: UserProperties,
     private val verificationService: VerificationService,
     private val reCaptchaService: ReCaptchaService,
-    private val mailService: MailService
+    private val mailService: MailService,
+    private val serverProperties: ServerProperties
 ) {
     fun signUp(body: UserSignUpRequestModel, method: UserAuthMethod): UserSignUpResult {
         if (method !in properties.authMethods)
@@ -47,20 +48,7 @@ class UserService(
             if (user.auth.verified)
                 return UserSignUpResult.USER_EXISTS
 
-            val resendMail = verificationService
-                .createOrUpdate(
-                    user.id,
-                    VerificationAction.USER_SIGN_UP,
-                    USER_SIGN_UP_VERIFICATION_TIME
-                )
-                .resendMail
-
-            if (resendMail)
-                mailService.sendMail(
-                    to = body.authKey,
-                    subject = "Privatter Sign Up",
-                    body = "TEST"
-                )
+            createOrUpdateSignUpVerification(email = body.authKey, userId = user.id)
 
             return UserSignUpResult.VERIFICATION_REQUIRED
         }
@@ -79,23 +67,27 @@ class UserService(
             )
         )
 
-        val resendMail = verificationService
-            .createOrUpdate(
-                newUser.id,
-                VerificationAction.USER_SIGN_UP,
-                USER_SIGN_UP_VERIFICATION_TIME
-            )
-            .resendMail
-
-        if (resendMail)
-            mailService.sendMail(
-                to = body.authKey,
-                subject = "Privatter Sign Up",
-                body = "TEST"
-            )
+        createOrUpdateSignUpVerification(email = body.authKey, userId = newUser.id)
 
         return UserSignUpResult.VERIFICATION_REQUIRED
     }
 
     private fun continueSignUpForGoogleOauth(body: UserSignUpRequestModel) = UserSignUpResult.INVALID_METHOD
+
+    private fun createOrUpdateSignUpVerification(email: String, userId: String) {
+        val verification = verificationService.createOrUpdate(
+            userId = userId,
+            action = VerificationAction.USER_SIGN_UP,
+            expirationTime = USER_SIGN_UP_VERIFICATION_TIME
+        )
+
+        if (verification.first.resendMail)
+            mailService.sendMail(
+                to = email,
+                subject = "Privatter Sign Up",
+                body = "Finish your Privatter account sign up: " +
+                    "${serverProperties.url}/user/verify-account" +
+                    "?user-id=$userId&token-hash=${verification.second.tokenHash}"
+            )
+    }
 }

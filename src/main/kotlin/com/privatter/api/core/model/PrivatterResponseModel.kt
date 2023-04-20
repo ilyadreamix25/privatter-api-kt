@@ -28,6 +28,6 @@ data class PrivatterResponseModel<T>(
     @SerialName("errorMessage")
     val errorMessage: String? = null,
 
-    @SerialName("errorStackTrace")
-    val errorStackTrace: List<String>? = null
+    @SerialName("errorInformation")
+    val errorInformation: List<String>? = null
 )

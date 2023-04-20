@@ -1,6 +1,5 @@
 package com.privatter.api.core
 
-import com.privatter.api.core.model.PrivatterEmptyResponseEntity
 import com.privatter.api.core.model.PrivatterEmptyResponseModel
 import com.privatter.api.core.model.PrivatterResponseModel
 import kotlinx.serialization.json.JsonObject
@@ -26,7 +25,11 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
         val INVALID_METHOD = parseError(PrivatterResponseResource.INVALID_METHOD)
         val SERVER_ERROR = parseError(PrivatterResponseResource.SERVER_ERROR)
         val USER_EXISTS = parseError(PrivatterResponseResource.USER_EXISTS)
-        val USER_VERIFICATION_REQUIRED = parseError(PrivatterResponseResource.USER_VERIFICATION_REQUIRED)
+        val USER_VERIFICATION_REQUIRED = PrivatterEmptyResponseModel(
+            message = PrivatterResponseResource.USER_VERIFICATION_REQUIRED.message,
+            statusCode = PrivatterResponseResource.USER_VERIFICATION_REQUIRED.statusCode,
+            hasError = false
+        )
     }
 
     companion object {
@@ -36,18 +39,18 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
             data = data,
             hasError = false,
             errorMessage = null,
-            errorStackTrace = null,
+            errorInformation = null,
         )
 
         fun parseError(
             resource: PrivatterResponseResource,
             errorMessage: String? = null,
-            errorStackTrace: List<String>? = null
+            errorInformation: List<String>? = null
         ) = PrivatterEmptyResponseModel(
             message = resource.message,
             statusCode = resource.statusCode,
             errorMessage = errorMessage,
-            errorStackTrace = errorStackTrace
+            errorInformation = errorInformation
         )
     }
 }

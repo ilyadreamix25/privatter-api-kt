@@ -1,7 +1,8 @@
 package com.privatter.api.core
 
-import com.privatter.api.core.model.PrivatterEmptyResponseEntity
-import com.privatter.api.utility.beautify
+import com.privatter.api.utility.beautifyStackTrace
+import com.privatter.api.validation.exception.ValidationException
+import com.privatter.api.validation.exception.ValidationMultipleException
 import org.springframework.http.HttpStatus
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.HttpRequestMethodNotSupportedException
@@ -26,15 +27,31 @@ class PrivatterExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleHttpMessageNotReadableException(): PrivatterEmptyResponseEntity = PrivatterEmptyResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(PrivatterResponseResource.Model.INVALID_REQUEST)
+    fun handleHttpMessageNotReadableException() =
+        PrivatterResponseResource.Model.INVALID_REQUEST
+
+    @ExceptionHandler(ValidationMultipleException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handleValidationMultipleException(exception: ValidationMultipleException) =
+        PrivatterResponseResource.parseError(
+            resource = PrivatterResponseResource.INVALID_REQUEST,
+            errorMessage = exception.message,
+            errorInformation = exception.validationExceptions.map { validationException ->
+                validationException.message!!
+            }
+        )
+
+    @ExceptionHandler(ValidationException::class)
+    fun handleValidationException(exception: ValidationException) = PrivatterResponseResource.parseError(
+        resource = PrivatterResponseResource.INVALID_REQUEST,
+        errorMessage = exception.message
+    )
 
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     fun handleInternalServerException(exception: Exception) = PrivatterResponseResource.parseError(
         resource = PrivatterResponseResource.SERVER_ERROR,
         errorMessage = exception.message,
-        errorStackTrace = exception.beautify(true).take(4)
+        errorInformation = exception.beautifyStackTrace(true).take(4)
     )
 }
