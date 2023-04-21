@@ -1,9 +1,8 @@
 package com.privatter.api.core
 
 import com.privatter.api.core.model.PrivatterEmptyResponseModel
+import com.privatter.api.utility.ValidationException
 import com.privatter.api.utility.beautifyStackTrace
-import com.privatter.api.validation.exception.ValidationException
-import com.privatter.api.validation.exception.ValidationMultipleException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -31,17 +30,6 @@ class PrivatterExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleHttpMessageNotReadableException() =
         PrivatterResponseResource.Model.INVALID_REQUEST
-
-    @ExceptionHandler(ValidationMultipleException::class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleValidationMultipleException(exception: ValidationMultipleException) =
-        PrivatterResponseResource.parseError(
-            resource = PrivatterResponseResource.INVALID_REQUEST,
-            errorMessage = exception.message,
-            errorInformation = exception.validationExceptions.map { validationException ->
-                validationException.message!!
-            }
-        )
 
     @ExceptionHandler(ValidationException::class)
     fun handleValidationException(exception: ValidationException) = PrivatterResponseResource.parseError(

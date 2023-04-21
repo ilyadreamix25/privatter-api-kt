@@ -6,11 +6,15 @@ import com.privatter.api.server.ServerProperties
 import com.privatter.api.user.entity.UserEntity
 import com.privatter.api.user.entity.UserEntityAuth
 import com.privatter.api.user.entity.UserEntityProfile
+import com.privatter.api.user.enums.UserAccountVerificationResult
 import com.privatter.api.user.enums.UserAuthMethod
 import com.privatter.api.user.enums.UserSignUpResult
 import com.privatter.api.user.model.UserSignUpRequestModel
+import com.privatter.api.utility.isEmail
+import com.privatter.api.utility.validate
 import com.privatter.api.verification.VerificationService
 import com.privatter.api.verification.enums.VerificationAction
+import com.privatter.api.verification.enums.VerificationResult
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 
@@ -36,8 +40,32 @@ class UserService(
         }
     }
 
+    fun verifyAccount(userId: String?, tokenHash: String?): Pair<UserAccountVerificationResult, UserEntity?> {
+        if (userId == null || tokenHash == null)
+            return UserAccountVerificationResult.INVALID_REQUEST to null
+
+        when (verificationService.verifyAndUpdate(userId, tokenHash, VerificationAction.USER_SIGN_UP)) {
+            VerificationResult.INVALID_USER_ID -> return UserAccountVerificationResult.INVALID_USER_ID to null
+            VerificationResult.INVALID_TOKEN_HASH -> return UserAccountVerificationResult.INVALID_TOKEN_HASH to null
+            VerificationResult.EXPIRED -> return UserAccountVerificationResult.EXPIRED to null
+            VerificationResult.ALREADY_VERIFIED -> return UserAccountVerificationResult.ALREADY_VERIFIED to null
+            VerificationResult.OK -> {}
+        }
+
+        val user = repository.find(userId) ?: return UserAccountVerificationResult.INVALID_USER_ID to null
+        user.auth.verified = true
+        user.auth.verifiedAt = System.currentTimeMillis()
+        repository.save(user)
+
+        return UserAccountVerificationResult.OK to user
+    }
+
     private fun continueSignUpForEmail(body: UserSignUpRequestModel): UserSignUpResult {
-        if (body.captchaToken == null || !reCaptchaService.siteVerifyToken(body.captchaToken))
+        validate(body.captchaToken != null, body::captchaToken.name)
+        validate(body.authKey.isEmail(), body::authKey.name)
+        validate(body.authValue.length < 6, body::authValue.name)
+
+        if (!reCaptchaService.siteVerifyToken(body.captchaToken!!))
             return UserSignUpResult.INVALID_CAPTCHA
 
         val user = repository.find(

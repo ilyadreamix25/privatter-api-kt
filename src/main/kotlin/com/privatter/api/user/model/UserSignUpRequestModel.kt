@@ -1,24 +1,17 @@
 package com.privatter.api.user.model
 
-import com.privatter.api.utility.validateFromContext
-import com.privatter.api.utility.validateFromRequirement
-import com.privatter.api.validation.*
+import com.privatter.api.utility.validate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserSignUpRequestModel(
-    @IsNotEmpty
     @SerialName("authKey")
     val authKey: String,
 
-    @IsNotEmpty
     @SerialName("authValue")
     val authValue: String,
 
-    @IsNotEmpty
-    @LengthBetween(4, 24)
-    @Matches("\\A[A-Za-z\\d_]+\\z")
     @SerialName("profileNickname")
     val profileNickname: String,
 
@@ -28,19 +21,21 @@ data class UserSignUpRequestModel(
     @SerialName("profileIconUrl")
     val profileIconUrl: String? = null,
 
-    @IsNotBlank
-    @Matches("[A-Za-z0-9_-]+")
     @SerialName("captchaToken")
     val captchaToken: String? = null
 ) {
     init {
-        validateFromRequirement(profileNickname.toSet() != setOf("_"), "Invalid profileNickname")
-        validateFromRequirement(profileNickname.toSet().size >= 3, "Invalid profileNickname")
+        validate(authKey.isNotEmpty(), UserSignUpRequestModel::authKey.name)
+        validate(authValue.isNotEmpty(), UserSignUpRequestModel::authValue.name)
+
+        validate(profileNickname.length in 4..24, UserSignUpRequestModel::profileNickname.name)
+        validate(profileNickname.matches("\\A[A-Za-z\\d_]+\\z".toRegex()), UserSignUpRequestModel::profileNickname.name)
+        validate(profileNickname.toSet() != setOf("_"), UserSignUpRequestModel::profileNickname.name)
+        validate(profileNickname.toSet().size >= 3, UserSignUpRequestModel::profileNickname.name)
 
         captchaToken?.let {
-            validateFromRequirement(it.isNotBlank(), "captchaToken must not be blank")
+            validate(it.isNotBlank(), UserSignUpRequestModel::captchaToken.name)
+            validate(it.matches("[A-Za-z0-9_-]+".toRegex()), UserSignUpRequestModel::captchaToken.name)
         }
-
-        validateFromContext(this)
     }
 }

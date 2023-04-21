@@ -20,10 +20,12 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
 
     object Model {
         val OK = parseOk<JsonObject>(null)
+
         val INVALID_REQUEST = parseError(PrivatterResponseResource.INVALID_REQUEST)
         val INVALID_SERVICE = parseError(PrivatterResponseResource.INVALID_SERVICE)
         val INVALID_METHOD = parseError(PrivatterResponseResource.INVALID_METHOD)
         val SERVER_ERROR = parseError(PrivatterResponseResource.SERVER_ERROR)
+
         val USER_EXISTS = parseError(PrivatterResponseResource.USER_EXISTS)
         val USER_VERIFICATION_REQUIRED = PrivatterEmptyResponseModel(
             message = PrivatterResponseResource.USER_VERIFICATION_REQUIRED.message,

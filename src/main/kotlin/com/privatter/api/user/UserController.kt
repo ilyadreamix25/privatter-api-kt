@@ -2,14 +2,20 @@ package com.privatter.api.user
 
 import com.privatter.api.core.PrivatterResponseResource
 import com.privatter.api.core.model.PrivatterEmptyResponseEntity
+import com.privatter.api.core.model.PrivatterResponseEntity
+import com.privatter.api.core.model.cast
+import com.privatter.api.user.enums.UserAccountVerificationResult
 import com.privatter.api.user.enums.UserAuthMethod
 import com.privatter.api.user.enums.UserSignUpResult
+import com.privatter.api.user.model.UserModel
+import com.privatter.api.user.model.UserModelMetadata
+import com.privatter.api.user.model.UserModelProfile
 import com.privatter.api.user.model.UserSignUpRequestModel
-import org.springframework.data.repository.query.Param
-import org.springframework.http.HttpStatus
+import com.privatter.api.utility.parseEnumError
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -18,10 +24,10 @@ class UserController(private val service: UserService) {
     @PostMapping("sign-up")
     fun signUp(
         @RequestBody body: UserSignUpRequestModel,
-        @Param("method") method: String? = null
+        @RequestParam("method") method: String?
     ): PrivatterEmptyResponseEntity {
         val invalidRequestEntity = PrivatterEmptyResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
+            .badRequest()
             .body(PrivatterResponseResource.Model.INVALID_REQUEST)
 
         method ?: return invalidRequestEntity
@@ -47,5 +53,39 @@ class UserController(private val service: UserService) {
     }
 
     @PostMapping("verify-account")
-    fun verifyAccount(): Nothing = TODO()
+    fun verifyAccount(
+        @RequestParam("user-id") userId: String?,
+        @RequestParam("token-hash") tokenHash: String?
+    ): PrivatterResponseEntity<UserModel> {
+        val (verificationResult, user) = service.verifyAccount(userId, tokenHash)
+        return when (verificationResult) {
+            UserAccountVerificationResult.OK -> PrivatterResponseEntity.ok()
+                .body(
+                    PrivatterResponseResource.parseOk(
+                        data = UserModel(
+                            id = user!!.id,
+                            profile = UserModelProfile(
+                                nickname = user.profile.nickname,
+                                description = user.profile.description,
+                                iconUrl = user.profile.iconUrl
+                            ),
+                            metadata = UserModelMetadata(
+                                signedUpAt = user.metadata.signedUpAt,
+                                lastSignedInAt = user.metadata.lastSignedInAt
+                            )
+                        )
+                    )
+                )
+
+            else -> PrivatterResponseEntity.badRequest()
+                .body(
+                    PrivatterResponseResource
+                        .parseError(
+                            resource = PrivatterResponseResource.INVALID_REQUEST,
+                            errorMessage = parseEnumError(UserAccountVerificationResult::class, verificationResult)
+                        )
+                        .cast()
+                )
+        }
+    }
 }

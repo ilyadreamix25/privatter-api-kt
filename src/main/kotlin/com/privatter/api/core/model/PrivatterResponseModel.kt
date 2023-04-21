@@ -31,3 +31,12 @@ data class PrivatterResponseModel<T>(
     @SerialName("errorInformation")
     val errorInformation: List<String>? = null
 )
+
+fun <T> PrivatterEmptyResponseModel.cast(data: T? = null) = PrivatterResponseModel(
+    message = this.message,
+    statusCode = this.statusCode,
+    data = data,
+    hasError = this.hasError,
+    errorMessage = this.errorMessage,
+    errorInformation = this.errorInformation
+)

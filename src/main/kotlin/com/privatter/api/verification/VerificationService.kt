@@ -4,6 +4,7 @@ import com.privatter.api.utility.toHexString
 import com.privatter.api.verification.entity.VerificationEntity
 import com.privatter.api.verification.enums.VerificationAction
 import com.privatter.api.verification.enums.VerificationCreateOrUpdateResult
+import com.privatter.api.verification.enums.VerificationResult
 import com.privatter.api.verification.models.VerificationTokenModel
 import org.springframework.stereotype.Service
 import javax.crypto.Mac
@@ -53,6 +54,29 @@ class VerificationService(
             verification,
             generateTokenHash(verification)
         )
+    }
+
+    fun verifyAndUpdate(
+        userId: String,
+        tokenHash: String,
+        action: VerificationAction
+    ): VerificationResult {
+        val verification = repository.findByUserId(userId, action.ordinal)
+            ?: return VerificationResult.INVALID_USER_ID
+
+        if (verification.activated)
+            return VerificationResult.ALREADY_VERIFIED
+
+        if (System.currentTimeMillis() > verification.createdAt + verification.expirationTime)
+            return VerificationResult.EXPIRED
+
+        if (generateTokenHash(verification) != tokenHash)
+            return VerificationResult.INVALID_TOKEN_HASH
+
+        verification.activated = true
+        repository.save(verification)
+
+        return VerificationResult.OK
     }
 
     private fun generateTokenHash(verification: VerificationEntity): String {

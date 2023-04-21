@@ -1,25 +1,13 @@
 package com.privatter.api.utility
 
-import com.privatter.api.validation.*
-import com.privatter.api.validation.exception.ValidationException
-import com.privatter.api.validation.exception.ValidationMultipleException
+class ValidationException(override val message: String? = "Validation error") : IllegalArgumentException()
 
-fun validateFromRequirement(
+fun validate(
     requirement: Boolean,
-    message: String? = null,
-    throwException: Boolean = true
-): ValidationException? {
-    if (!requirement && throwException)
-        throw ValidationException(message)
-
-    return if (!requirement)
-        ValidationException(message)
-    else null
-}
-
-fun <T : Any> validateFromContext(context: T) {
-    val validationProperties = context::class.findValidationProperties()
-    val validationExceptions = validationProperties.getValidationExceptions(context)
-    if (validationExceptions.isNotEmpty())
-        throw ValidationMultipleException(validationExceptions)
+    message: String? = null
+) {
+    if (!requirement) {
+        val formattedMessage = if (message != null) "Invalid field: $message" else null
+        throw ValidationException(formattedMessage)
+    }
 }
