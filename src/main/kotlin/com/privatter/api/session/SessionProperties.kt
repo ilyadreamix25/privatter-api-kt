@@ -1,11 +1,11 @@
-package com.privatter.api.recaptcha
+package com.privatter.api.session
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 
 @Component
-@ConfigurationProperties(prefix = "privatter.google.recaptcha")
-class ReCaptchaProperties {
+@ConfigurationProperties("privatter.session")
+class SessionProperties {
     lateinit var secret: String
-    lateinit var remote: String
+    lateinit var algorithm: String
 }

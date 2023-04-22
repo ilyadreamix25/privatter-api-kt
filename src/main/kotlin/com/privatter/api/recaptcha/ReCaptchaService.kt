@@ -22,7 +22,9 @@ class ReCaptchaService(
         val restTemplate = RestTemplate()
         val response = restTemplate.getForEntity(
             properties.remote,
-            String::class.java
+            String::class.java,
+            properties.secret,
+            token
         )
 
         if (response.statusCode != HttpStatus.OK || response.body == null)

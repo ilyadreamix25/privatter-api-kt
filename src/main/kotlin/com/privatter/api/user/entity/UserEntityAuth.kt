@@ -16,4 +16,7 @@ class UserEntityAuth(
 
     @Column(name = "auth_verified_at")
     var verifiedAt: Long = 0,
+
+    @Column(name = "auth_ips")
+    var ips: List<String>
 )

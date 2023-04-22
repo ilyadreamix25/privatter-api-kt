@@ -3,6 +3,7 @@ package com.privatter.api.user
 import com.privatter.api.mail.MailService
 import com.privatter.api.recaptcha.ReCaptchaService
 import com.privatter.api.server.ServerProperties
+import com.privatter.api.session.SessionService
 import com.privatter.api.user.entity.UserEntity
 import com.privatter.api.user.entity.UserEntityAuth
 import com.privatter.api.user.entity.UserEntityProfile
@@ -10,16 +11,23 @@ import com.privatter.api.user.enums.UserAccountVerificationResult
 import com.privatter.api.user.enums.UserAuthMethod
 import com.privatter.api.user.enums.UserSignUpResult
 import com.privatter.api.user.model.UserSignUpRequestModel
+import com.privatter.api.utility.fromBase64ToByteArray
 import com.privatter.api.utility.isEmail
+import com.privatter.api.utility.toBase64
 import com.privatter.api.utility.validate
 import com.privatter.api.verification.VerificationService
 import com.privatter.api.verification.enums.VerificationAction
 import com.privatter.api.verification.enums.VerificationResult
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
+import javax.crypto.Cipher
+import javax.crypto.spec.SecretKeySpec
 
 /** 15 minutes */
 private const val USER_SIGN_UP_VERIFICATION_TIME = 1000 * 60 * 15L
+
+/** One day */
+private const val USER_SESSION_EXPIRATION_TIME = 1000 * 60 * 60 * 24L
 
 @Service
 class UserService(
@@ -27,15 +35,16 @@ class UserService(
     private val properties: UserProperties,
     private val verificationService: VerificationService,
     private val reCaptchaService: ReCaptchaService,
+    private val sessionService: SessionService,
     private val mailService: MailService,
-    private val serverProperties: ServerProperties
+    private val serverProperties: ServerProperties,
 ) {
-    fun signUp(body: UserSignUpRequestModel, method: UserAuthMethod): UserSignUpResult {
+    fun signUp(body: UserSignUpRequestModel, method: UserAuthMethod, ip: String): UserSignUpResult {
         if (method !in properties.authMethods)
             return UserSignUpResult.INVALID_METHOD
 
         return when (method) {
-            UserAuthMethod.EMAIL -> continueSignUpForEmail(body)
+            UserAuthMethod.EMAIL -> continueSignUpForEmail(body, ip)
             UserAuthMethod.GOOGLE_OAUTH -> continueSignUpForGoogleOauth(body)
         }
     }
@@ -60,16 +69,19 @@ class UserService(
         return UserAccountVerificationResult.OK to user
     }
 
-    private fun continueSignUpForEmail(body: UserSignUpRequestModel): UserSignUpResult {
+    fun createSessionToken(userId: String, ip: String) =
+        sessionService.create(userId, ip, USER_SESSION_EXPIRATION_TIME)
+
+    private fun continueSignUpForEmail(body: UserSignUpRequestModel, ip: String): UserSignUpResult {
         validate(body.captchaToken != null, body::captchaToken.name)
         validate(body.authKey.isEmail(), body::authKey.name)
-        validate(body.authValue.length < 6, body::authValue.name)
+        validate(body.authValue.length >= 6, body::authValue.name)
 
         if (!reCaptchaService.siteVerifyToken(body.captchaToken!!))
             return UserSignUpResult.INVALID_CAPTCHA
 
         val user = repository.find(
-            authKey = body.authKey,
+            authKey = body.authKey.encoded,
             profileNickname = body.profileNickname
         )
 
@@ -86,8 +98,9 @@ class UserService(
             val newUser = repository.save(
                 UserEntity(
                     auth = UserEntityAuth(
-                        key = body.authKey,
-                        value = body.authValue
+                        key = body.authKey.encoded,
+                        value = body.authValue.encoded,
+                        ips = listOf(ip)
                     ),
                     profile = UserEntityProfile(
                         nickname = body.profileNickname,
@@ -123,4 +136,22 @@ class UserService(
                     "?user-id=$userId&token-hash=${verification.second.tokenHash}"
             )
     }
+
+    private fun encodeString(value: String): String {
+        val secretKeySpec = SecretKeySpec(properties.secret.toByteArray(), properties.algorithm)
+        val cipher = Cipher.getInstance(properties.algorithm)
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec)
+        return cipher.doFinal(value.toByteArray()).toBase64()
+    }
+
+    private val String.encoded get() = encodeString(this)
+
+    private fun decodeString(value: String): String {
+        val secretKeySpec = SecretKeySpec(properties.secret.toByteArray(), properties.algorithm)
+        val cipher = Cipher.getInstance(properties.algorithm)
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
+        return String(cipher.doFinal(value.fromBase64ToByteArray()))
+    }
+
+    private val String.decoded get() = decodeString(this)
 }

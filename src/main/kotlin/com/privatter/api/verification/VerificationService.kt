@@ -1,6 +1,7 @@
 package com.privatter.api.verification
 
-import com.privatter.api.utility.toHexString
+import com.privatter.api.utility.toBase64
+import com.privatter.api.utility.toSafeBase64
 import com.privatter.api.verification.entity.VerificationEntity
 import com.privatter.api.verification.enums.VerificationAction
 import com.privatter.api.verification.enums.VerificationCreateOrUpdateResult
@@ -92,6 +93,6 @@ class VerificationService(
                 init(secretKeySpec)
             }
             .doFinal(shortTokenInfo.toByteArray())
-            .toHexString()
+            .toSafeBase64()
     }
 }

@@ -14,6 +14,8 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
     INVALID_SERVICE(1001, "Invalid service. $UPDATE_APP"),
     INVALID_METHOD(1002, "Invalid method. $UPDATE_APP"),
     SERVER_ERROR(1003, "Server error. $TRY_AGAIN_LATER"),
+    INVALID_SESSION(1004, "Invalid session. $UPDATE_APP"),
+    SESSION_EXPIRED(1005, "Session expired. Please re-login."),
 
     USER_EXISTS(2000, "A user with such credentials already exists."),
     USER_VERIFICATION_REQUIRED(2001, "Verification required. Please check your mailbox.");
@@ -25,6 +27,8 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
         val INVALID_SERVICE = parseError(PrivatterResponseResource.INVALID_SERVICE)
         val INVALID_METHOD = parseError(PrivatterResponseResource.INVALID_METHOD)
         val SERVER_ERROR = parseError(PrivatterResponseResource.SERVER_ERROR)
+        val INVALID_SESSION = parseError(PrivatterResponseResource.INVALID_SESSION)
+        val SESSION_EXPIRED = parseError(PrivatterResponseResource.SESSION_EXPIRED)
 
         val USER_EXISTS = parseError(PrivatterResponseResource.USER_EXISTS)
         val USER_VERIFICATION_REQUIRED = PrivatterEmptyResponseModel(

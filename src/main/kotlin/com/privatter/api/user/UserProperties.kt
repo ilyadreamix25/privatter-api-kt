@@ -8,4 +8,6 @@ import org.springframework.stereotype.Component
 @ConfigurationProperties(prefix = "privatter.user")
 class UserProperties {
     lateinit var authMethods: List<UserAuthMethod>
+    lateinit var secret: String
+    lateinit var algorithm: String
 }

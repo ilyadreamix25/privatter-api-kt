@@ -1,6 +1,7 @@
 package com.privatter.api.core
 
 import com.privatter.api.core.model.PrivatterEmptyResponseModel
+import com.privatter.api.session.exception.SessionException
 import com.privatter.api.utility.ValidationException
 import com.privatter.api.utility.beautifyStackTrace
 import org.slf4j.LoggerFactory
@@ -32,10 +33,17 @@ class PrivatterExceptionHandler {
         PrivatterResponseResource.Model.INVALID_REQUEST
 
     @ExceptionHandler(ValidationException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleValidationException(exception: ValidationException) = PrivatterResponseResource.parseError(
         resource = PrivatterResponseResource.INVALID_REQUEST,
         errorMessage = exception.message
     )
+
+    @ExceptionHandler(SessionException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun handleSessionException(exception: SessionException) =
+        if (exception.reLogin) PrivatterResponseResource.Model.SESSION_EXPIRED
+        else PrivatterResponseResource.Model.INVALID_SESSION
 
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

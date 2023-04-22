@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ServerStatusModel(
+data class ServerInformationModel(
     @SerialName("version")
     val version: String,
 
