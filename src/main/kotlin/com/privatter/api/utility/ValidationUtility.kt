@@ -4,10 +4,10 @@ class ValidationException(override val message: String? = "Validation error") : 
 
 fun validate(
     requirement: Boolean,
-    message: String? = null
+    fieldName: String? = null
 ) {
     if (!requirement) {
-        val formattedMessage = if (message != null) "Invalid field: $message" else null
+        val formattedMessage = if (fieldName != null) "Invalid field: $fieldName" else null
         throw ValidationException(formattedMessage)
     }
 }

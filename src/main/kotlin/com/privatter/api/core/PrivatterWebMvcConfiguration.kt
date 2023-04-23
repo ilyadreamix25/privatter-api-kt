@@ -1,4 +1,4 @@
-package com.privatter.api
+package com.privatter.api.core
 
 import com.privatter.api.session.SessionMethodArgumentResolver
 import com.privatter.api.session.SessionService

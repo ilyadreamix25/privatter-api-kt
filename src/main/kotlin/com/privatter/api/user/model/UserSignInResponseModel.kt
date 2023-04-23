@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserSignUpResponseModel(
+data class UserSignInResponseModel(
     @SerialName("user")
     val user: UserModel,
 

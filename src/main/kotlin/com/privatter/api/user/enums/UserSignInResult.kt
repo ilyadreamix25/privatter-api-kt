@@ -4,17 +4,19 @@ import com.privatter.api.core.PrivatterResponseResource
 import com.privatter.api.core.model.PrivatterEmptyResponseEntity
 import com.privatter.api.core.model.PrivatterResponseEntity
 import com.privatter.api.core.model.cast
-import com.privatter.api.user.model.UserSignUpResponseModel
+import com.privatter.api.user.model.UserSignInResponseModel
 
-enum class UserSignUpResult {
+enum class UserSignInResult {
     INVALID_METHOD,
     INVALID_CAPTCHA,
-    USER_EXISTS,
+    USER_DOES_NOT_EXIST,
+    INVALID_AUTH_VALUE,
+    ACCOUNT_IS_NOT_ACTIVATED,
     VERIFICATION_REQUIRED,
     INVALID_VERIFICATION,
     OK;
 
-    fun parseEntity(): PrivatterResponseEntity<UserSignUpResponseModel>? = when (this) {
+    fun parseEntity(): PrivatterResponseEntity<UserSignInResponseModel>? = when (this) {
         INVALID_METHOD -> PrivatterEmptyResponseEntity
             .badRequest()
             .body(PrivatterResponseResource.Model.INVALID_REQUEST.cast())
@@ -23,9 +25,17 @@ enum class UserSignUpResult {
             .badRequest()
             .body(PrivatterResponseResource.Model.INVALID_REQUEST.cast())
 
-        USER_EXISTS -> PrivatterEmptyResponseEntity
+        USER_DOES_NOT_EXIST -> PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.USER_EXISTS.cast())
+            .body(PrivatterResponseResource.Model.USER_DOES_NOT_EXIST.cast())
+
+        INVALID_AUTH_VALUE -> PrivatterEmptyResponseEntity
+            .badRequest()
+            .body(PrivatterResponseResource.Model.USER_INVALID_PASSWORD.cast())
+
+        ACCOUNT_IS_NOT_ACTIVATED -> PrivatterEmptyResponseEntity
+            .badRequest()
+            .body(PrivatterResponseResource.Model.USER_ACCOUNT_NOT_ACTIVATED.cast())
 
         VERIFICATION_REQUIRED -> PrivatterEmptyResponseEntity
             .badRequest()

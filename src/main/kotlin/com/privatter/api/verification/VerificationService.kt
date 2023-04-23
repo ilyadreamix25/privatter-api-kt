@@ -10,6 +10,7 @@ import com.privatter.api.verification.models.VerificationTokenModel
 import org.springframework.stereotype.Service
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 class VerificationService(
@@ -57,12 +58,8 @@ class VerificationService(
         )
     }
 
-    fun verifyAndUpdate(
-        userId: String,
-        tokenHash: String,
-        action: VerificationAction
-    ): VerificationResult {
-        val verification = repository.findByUserId(userId, action.ordinal)
+    fun verifyAndUpdate(tokenId: String, tokenHash: String): VerificationResult {
+        val verification = repository.findById(tokenId).getOrNull()
             ?: return VerificationResult.INVALID_USER_ID
 
         if (verification.activated)

@@ -13,7 +13,6 @@ import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Service
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import kotlin.jvm.optionals.getOrNull
 
 @Service
 class SessionService(
@@ -56,8 +55,7 @@ class SessionService(
             val clientHeader = json.decodeFromString<SessionHeaderModel>(jsonHeader)
             val clientSession = json.decodeFromString<SessionModel>(jsonSession)
 
-            val serverSession = repository.findById(clientSession.id).getOrNull()
-                ?: return SessionFromTokenResult.INVALID_TOKEN to null
+            val serverSession = repository.findById(clientSession.id).get()
 
             if (serverSession.version != clientHeader.version || serverProperties.version != clientHeader.version)
                 return SessionFromTokenResult.INVALID_VERSION to null
