@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.privatter.api"
-version = "1.0.10"
+version = "1.0.11"
 
 repositories {
     mavenCentral()

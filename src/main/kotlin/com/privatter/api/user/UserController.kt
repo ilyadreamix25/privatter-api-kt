@@ -26,7 +26,7 @@ class UserController(private val service: UserService) {
     ): PrivatterResponseEntity<UserSignUpResponseModel> {
         val invalidRequestEntity = PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.INVALID_REQUEST.cast<UserSignUpResponseModel>())
+            .body(PrivatterResponseResource.INVALID_REQUEST.asModel.cast<UserSignUpResponseModel>())
 
         method ?: return invalidRequestEntity
         val authMethod = UserAuthMethod.of(method) ?: return invalidRequestEntity
@@ -62,7 +62,7 @@ class UserController(private val service: UserService) {
     ): ResponseEntity<PrivatterResponseModel<UserSignInResponseModel>> {
         val invalidRequestEntity = PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.INVALID_REQUEST.cast<UserSignInResponseModel>())
+            .body(PrivatterResponseResource.INVALID_REQUEST.asModel.cast<UserSignInResponseModel>())
 
         method ?: return invalidRequestEntity
         val authMethod = UserAuthMethod.of(method) ?: return invalidRequestEntity

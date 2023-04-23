@@ -17,23 +17,23 @@ enum class UserSignUpResult {
     fun parseEntity(): PrivatterResponseEntity<UserSignUpResponseModel>? = when (this) {
         INVALID_METHOD -> PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.INVALID_REQUEST.cast())
+            .body(PrivatterResponseResource.INVALID_REQUEST.asModel.cast())
 
         INVALID_CAPTCHA -> PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.INVALID_REQUEST.cast())
+            .body(PrivatterResponseResource.INVALID_REQUEST.asModel.cast())
 
         USER_EXISTS -> PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.USER_EXISTS.cast())
+            .body(PrivatterResponseResource.USER_EXISTS.asModel.cast())
 
         VERIFICATION_REQUIRED -> PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.USER_VERIFICATION_REQUIRED.cast())
+            .body(PrivatterResponseResource.USER_VERIFICATION_REQUIRED.asModel.cast())
 
         INVALID_VERIFICATION -> PrivatterEmptyResponseEntity
             .badRequest()
-            .body(PrivatterResponseResource.Model.USER_VERIFICATION_INVALID_DATA.cast())
+            .body(PrivatterResponseResource.USER_VERIFICATION_INVALID_DATA.asModel.cast())
 
         else -> null
     }
