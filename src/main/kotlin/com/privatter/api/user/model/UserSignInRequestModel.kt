@@ -17,6 +17,6 @@ data class UserSignInRequestModel(
     @SerialName("verificationTokenId")
     val verificationTokenId: String? = null,
 
-    @SerialName("verificationTokenHash")
-    val verificationTokenHash: String? = null,
+    @SerialName("verificationTokenSecret")
+    val verificationTokenSecret: String? = null,
 )

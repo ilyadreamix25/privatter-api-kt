@@ -2,6 +2,7 @@ package com.privatter.api.core
 
 import com.privatter.api.core.model.PrivatterEmptyResponseModel
 import com.privatter.api.core.model.PrivatterResponseModel
+import kotlinx.serialization.json.JsonObject
 
 private const val UPDATE_APP = "Update the app to the latest version."
 private const val TRY_AGAIN = "Please try again."
@@ -16,16 +17,19 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
     INVALID_SESSION(1004, "Invalid session. $UPDATE_APP"),
 
     USER_EXISTS(2000, "A user with such credentials already exists."),
-    USER_VERIFICATION_REQUIRED(2001, "Verification required. Please check your mailbox."),
+    USER_VERIFICATION_REQUIRED(2001, "Verification required."),
     USER_DOES_NOT_EXIST(2002, "User does not exist."),
     USER_INVALID_PASSWORD(2003, "Invalid password."),
     USER_ACCOUNT_NOT_ACTIVATED(2004, "To sign in to your account, first activate it."),
     USER_VERIFICATION_INVALID_DATA(2005, "Invalid verification data. $TRY_AGAIN"),
     USER_SESSION_EXPIRED(2006, "Session expired. Please re-login.");
 
-    val asModel get() = parseError(this)
+    val asErrorModel get() = parseError(this)
 
     companion object {
+        val OK_MODEL = PrivatterResponseResource.parseOk<JsonObject>()
+
+        @JvmStatic
         fun <T> parseOk(data: T? = null) = PrivatterResponseModel(
             message = OK.message,
             statusCode = OK.statusCode,
@@ -35,6 +39,7 @@ enum class PrivatterResponseResource(val statusCode: Int, val message: String) {
             errorInformation = null,
         )
 
+        @JvmStatic
         fun parseError(
             resource: PrivatterResponseResource,
             errorMessage: String? = null,

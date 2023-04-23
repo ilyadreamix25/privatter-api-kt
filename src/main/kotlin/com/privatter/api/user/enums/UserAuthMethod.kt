@@ -5,6 +5,7 @@ enum class UserAuthMethod(private val methodName: String) {
     GOOGLE_OAUTH("google-oauth");
 
     companion object {
+        @JvmStatic
         fun of(methodName: String) =
             UserAuthMethod.values().find { value ->
                 methodName.lowercase() == value.methodName

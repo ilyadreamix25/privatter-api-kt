@@ -24,11 +24,11 @@ data class UserSignUpRequestModel(
     @SerialName("captchaToken")
     val captchaToken: String? = null,
 
-    @SerialName("verificationTokenId")
-    val verificationTokenId: String? = null,
+    // @SerialName("verificationTokenId")
+    // val verificationTokenId: String? = null,
 
-    @SerialName("verificationTokenHash")
-    val verificationTokenHash: String? = null,
+    // @SerialName("verificationTokenSecret")
+    // val verificationTokenSecret: String? = null,
 ) {
     init {
         validate(authKey.isNotEmpty(), UserSignUpRequestModel::authKey.name)
@@ -44,9 +44,9 @@ data class UserSignUpRequestModel(
             validate(it.matches("[A-Za-z0-9_-]+".toRegex()), UserSignUpRequestModel::captchaToken.name)
         }
 
-        verificationTokenId?.let {
-            validate(it.isNotEmpty(), UserSignUpRequestModel::verificationTokenId.name)
-            validate(!verificationTokenHash.isNullOrEmpty(), UserSignUpRequestModel::verificationTokenId.name)
-        }
+        // verificationTokenId?.let {
+        //     validate(it.isNotEmpty(), UserSignUpRequestModel::verificationTokenId.name)
+        //     validate(!verificationTokenSecret.isNullOrEmpty(), UserSignUpRequestModel::verificationTokenId.name)
+        // }
     }
 }

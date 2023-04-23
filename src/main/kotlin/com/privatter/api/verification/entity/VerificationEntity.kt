@@ -24,6 +24,6 @@ class VerificationEntity(
     @Column(name = "expiration_time")
     var expirationTime: Long,
 
-    @Column(name = "activated")
-    var activated: Boolean = false
+    @Column(name = "secret")
+    var secret: String
 )

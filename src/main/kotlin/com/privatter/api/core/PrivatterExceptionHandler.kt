@@ -20,17 +20,17 @@ class PrivatterExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun handleNoHandlerFoundException() =
-        PrivatterResponseResource.INVALID_SERVICE.asModel
+        PrivatterResponseResource.INVALID_SERVICE.asErrorModel
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     fun handleHttpRequestMethodNotSupportedException() =
-        PrivatterResponseResource.INVALID_METHOD.asModel
+        PrivatterResponseResource.INVALID_METHOD.asErrorModel
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleHttpMessageNotReadableException() =
-        PrivatterResponseResource.INVALID_REQUEST.asModel
+        PrivatterResponseResource.INVALID_REQUEST.asErrorModel
 
     @ExceptionHandler(ValidationException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -42,8 +42,8 @@ class PrivatterExceptionHandler {
     @ExceptionHandler(SessionException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handleSessionException(exception: SessionException) =
-        if (exception.reLogin) PrivatterResponseResource.USER_SESSION_EXPIRED.asModel
-        else PrivatterResponseResource.INVALID_SESSION.asModel
+        if (exception.reLogin) PrivatterResponseResource.USER_SESSION_EXPIRED.asErrorModel
+        else PrivatterResponseResource.INVALID_SESSION.asErrorModel
 
     @ExceptionHandler(Exception::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

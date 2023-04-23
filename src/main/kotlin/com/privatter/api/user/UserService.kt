@@ -7,27 +7,22 @@ import com.privatter.api.user.entity.UserEntity
 import com.privatter.api.user.entity.UserEntityAuth
 import com.privatter.api.user.entity.UserEntityProfile
 import com.privatter.api.user.enums.UserAuthMethod
+import com.privatter.api.user.enums.UserRequestActionVerificationResult
 import com.privatter.api.user.enums.UserSignInResult
 import com.privatter.api.user.enums.UserSignUpResult
 import com.privatter.api.user.model.UserSignInRequestModel
 import com.privatter.api.user.model.UserSignUpRequestModel
-import com.privatter.api.utility.fromBase64ToByteArray
 import com.privatter.api.utility.isEmail
 import com.privatter.api.utility.toBase64
 import com.privatter.api.utility.validate
 import com.privatter.api.verification.VerificationService
 import com.privatter.api.verification.enums.VerificationAction
-import com.privatter.api.verification.enums.VerificationResult
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
-import javax.crypto.Cipher
+import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-/** 15 minutes */
-private const val USER_SIGN_UP_VERIFICATION_TIME = 1000 * 60 * 15L
-
-/** 15 minutes */
-private const val USER_SIGN_IN_VERIFICATION_TIME = 1000 * 60 * 15L
+/** 3 minutes */
+private const val USER_VERIFICATION_TIME = 1000 * 60 * 3L
 
 /** One day */
 private const val USER_SESSION_EXPIRATION_TIME = 1000 * 60 * 60 * 24L
@@ -67,6 +62,41 @@ class UserService(
     fun createSessionToken(userId: String, ip: String) =
         sessionService.create(userId, ip, USER_SESSION_EXPIRATION_TIME)
 
+    fun requestActionVerification(
+        email: String,
+        action: VerificationAction
+    ): Pair<UserRequestActionVerificationResult, String?> {
+        val user = repository.findByAuthKey(email)
+            ?: return UserRequestActionVerificationResult.USER_DOES_NOT_EXIST to null
+
+        val (result, token) = verificationService.createOrUpdate(
+            userId = user.id,
+            action = action,
+            expirationTime = USER_VERIFICATION_TIME
+        )
+
+        if (result.resendMail)
+            mailService.sendMail(
+                to = email,
+                subject = "Privatter Verification",
+                body = "Here's your Privatter code: ${token.secret}"
+            )
+
+        return UserRequestActionVerificationResult.OK to token.id
+    }
+
+    fun verifyToken(
+        tokenId: String,
+        tokenSecret: String
+    ) = verificationService.verifyAndUpdate(tokenId, tokenSecret)
+
+    fun verifyUser(userId: String) {
+        val user = repository.findById(userId).get()
+        user.auth.verified = true
+        user.auth.verifiedAt = System.currentTimeMillis()
+        repository.save(user)
+    }
+
     private fun continueSignUpForEmail(body: UserSignUpRequestModel, ip: String): Pair<UserSignUpResult, UserEntity?> {
         validate(body.captchaToken != null, body::captchaToken.name)
         validate(body.authKey.isEmail(), body::authKey.name)
@@ -76,50 +106,29 @@ class UserService(
             return UserSignUpResult.INVALID_CAPTCHA to null
 
         val user = repository.find(
-            authKey = body.authKey.encoded,
+            authKey = body.authKey,
             profileNickname = body.profileNickname
         )
 
-        if (user != null) {
-            if (user.auth.verified)
-                return UserSignUpResult.USER_EXISTS to null
+        if (user != null)
+            return UserSignUpResult.USER_EXISTS to null
 
-            if (body.verificationTokenId != null) {
-                return when (verificationService.verifyAndUpdate(body.verificationTokenId, body.verificationTokenHash!!)) {
-                    VerificationResult.OK -> {
-                        user.auth.verified = true
-                        user.auth.verifiedAt = System.currentTimeMillis()
-                        repository.save(user)
-
-                        UserSignUpResult.OK to user
-                    }
-                    else -> UserSignUpResult.INVALID_VERIFICATION to null
-                }
-            }
-        }
-
-        try {
-            val newUser = repository.save(
-                UserEntity(
-                    auth = UserEntityAuth(
-                        key = body.authKey.encoded,
-                        value = body.authValue.encoded,
-                        ips = listOf(ip)
-                    ),
-                    profile = UserEntityProfile(
-                        nickname = body.profileNickname,
-                        description = body.profileDescription,
-                        iconUrl = body.profileIconUrl
-                    )
+        val newUser = repository.save(
+            UserEntity(
+                auth = UserEntityAuth(
+                    key = body.authKey,
+                    value = generatePasswordHash(body.authValue),
+                    ips = listOf(ip)
+                ),
+                profile = UserEntityProfile(
+                    nickname = body.profileNickname,
+                    description = body.profileDescription,
+                    iconUrl = body.profileIconUrl
                 )
             )
+        )
 
-            createOrUpdateSignUpVerification(email = body.authKey, userId = newUser.id)
-
-            return UserSignUpResult.VERIFICATION_REQUIRED to null
-        } catch (_: DataIntegrityViolationException) {
-            return UserSignUpResult.USER_EXISTS to null
-        }
+        return UserSignUpResult.OK to newUser
     }
 
     private fun continueSignUpForGoogleOauth(body: UserSignUpRequestModel, ip: String) = UserSignUpResult.INVALID_METHOD
@@ -132,10 +141,10 @@ class UserService(
         if (!reCaptchaService.siteVerifyToken(body.captchaToken!!))
             return UserSignInResult.INVALID_CAPTCHA to null
 
-        val user = repository.findByAuthKey(body.authKey.encoded)
+        val user = repository.findByAuthKey(body.authKey)
             ?: return UserSignInResult.USER_DOES_NOT_EXIST to null
 
-        if (user.auth.value.decoded != body.authValue)
+        if (user.auth.value != generatePasswordHash(body.authValue))
             return UserSignInResult.INVALID_AUTH_VALUE to null
 
         if (!user.auth.verified)
@@ -150,25 +159,11 @@ class UserService(
             verificationRequired = true
 
         if (verificationRequired) {
-            if (body.verificationTokenId != null)
-                return when (verificationService.verifyAndUpdate(body.verificationTokenId, body.verificationTokenHash!!)) {
-                    VerificationResult.OK -> {
-                        if (ip !in user.auth.ips) {
-                            val newIps = user.auth.ips.toMutableList()
-                            newIps.add(ip)
-                            user.auth.ips = newIps
-                        }
-                        user.metadata.lastSignedInAt = System.currentTimeMillis()
-                        repository.save(user)
+            val verification = verificationService.find(user.id, VerificationAction.USER_SIGN_IN)
+                ?: return UserSignInResult.VERIFICATION_REQUIRED to null
 
-                        UserSignInResult.OK to user
-                    }
-                    else -> UserSignInResult.INVALID_VERIFICATION to null
-                }
-
-            createOrUpdateSignInVerification(email = body.authKey, userId = user.id)
-
-            return UserSignInResult.VERIFICATION_REQUIRED to null
+            if (System.currentTimeMillis() > verification.createdAt + verification.expirationTime)
+                return UserSignInResult.VERIFICATION_REQUIRED to null
         }
 
         user.metadata.lastSignedInAt = System.currentTimeMillis()
@@ -179,55 +174,13 @@ class UserService(
 
     private fun continueSignInForGoogleOauth(body: UserSignInRequestModel, ip: String) = UserSignInResult.INVALID_METHOD
 
-    private fun createOrUpdateSignUpVerification(email: String, userId: String) {
-        val verification = verificationService.createOrUpdate(
-            userId = userId,
-            action = VerificationAction.USER_SIGN_UP,
-            expirationTime = USER_SIGN_UP_VERIFICATION_TIME
-        )
-
-        if (verification.first.resendMail)
-            mailService.sendMail(
-                to = email,
-                subject = "Privatter Sign Up",
-                body = "Finish your Privatter account sign up: " +
-                    "privatter://user/finish-sign-up" +
-                    "?token-id=${verification.second.info.id}&token-hash=${verification.second.tokenHash}"
-            )
-    }
-
-    private fun createOrUpdateSignInVerification(email: String, userId: String) {
-        val verification = verificationService.createOrUpdate(
-            userId = userId,
-            action = VerificationAction.USER_SIGN_IN,
-            expirationTime = USER_SIGN_IN_VERIFICATION_TIME
-        )
-
-        if (verification.first.resendMail)
-            mailService.sendMail(
-                to = email,
-                subject = "Privatter Sign In",
-                body = "Finish your Privatter account sign in: " +
-                    "privatter://user/finish-sign-in" +
-                    "?token-id=${verification.second.info.id}&token-hash=${verification.second.tokenHash}"
-            )
-    }
-
-    private fun encodeString(value: String): String {
+    private fun generatePasswordHash(value: String): String {
         val secretKeySpec = SecretKeySpec(properties.secret.toByteArray(), properties.algorithm)
-        val cipher = Cipher.getInstance(properties.algorithm)
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec)
-        return cipher.doFinal(value.toByteArray()).toBase64()
+        return Mac.getInstance(properties.algorithm)
+            .apply {
+                init(secretKeySpec)
+            }
+            .doFinal(value.toByteArray())
+            .toBase64()
     }
-
-    private val String.encoded get() = encodeString(this)
-
-    private fun decodeString(value: String): String {
-        val secretKeySpec = SecretKeySpec(properties.secret.toByteArray(), properties.algorithm)
-        val cipher = Cipher.getInstance(properties.algorithm)
-        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
-        return String(cipher.doFinal(value.fromBase64ToByteArray()))
-    }
-
-    private val String.decoded get() = decodeString(this)
 }
