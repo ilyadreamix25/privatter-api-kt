@@ -1,6 +1,7 @@
 [versions]
 kotlinJvm = "1.8.20"
 kotlinxSerializationJson = "1.5.0"
+kotlinxCoroutines = "1.6.4"
 springFrameworkBoot = "3.0.5"
 springDependencyManagment = "1.1.0"
 javaxMail = "1.4.7"
@@ -8,7 +9,10 @@ javaxMail = "1.4.7"
 [libraries]
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-reactor = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-reactor", version.ref = "kotlinxCoroutines" }
 springboot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa" }
+springboot-starter-webflux = { group = "org.springframework.boot", name = "spring-boot-starter-webflux" }
 springboot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
 springboot-starter-mail = { group = "org.springframework.boot", name = "spring-boot-starter-mail" }
 postgresql = { group = "org.postgresql", name = "postgresql" }
